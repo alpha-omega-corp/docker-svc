@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/docker-svc.iml" filepath="$PROJECT_DIR$/.idea/docker-svc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../user-svc/.idea/user-svc.iml" filepath="$PROJECT_DIR$/../user-svc/.idea/user-svc.iml" />
     </modules>
   </component>
 </project>
