@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"embed"
 	"github.com/alpha-omega-corp/docker-svc/pkg/types"
+	st "github.com/alpha-omega-corp/services/types"
+
 	"html/template"
 	"io/fs"
 	"sync"
@@ -17,15 +19,17 @@ var (
 )
 
 type TemplateHandler interface {
-	CreateDockerfile(content []byte) (*bytes.Buffer, error)
+	CreateDockerFile(content []byte) (*bytes.Buffer, error)
+	CreateDockerBuild(name string, tag string) (*bytes.Buffer, error)
 }
 
 type templateHandler struct {
 	TemplateHandler
 	template *template.Template
+	config   st.Config
 }
 
-func NewTemplateHandler() TemplateHandler {
+func NewTemplateHandler(config st.Config) TemplateHandler {
 	fileSys := getFS()
 	tmpl, err := template.ParseFS(fileSys, "*.template")
 	if err != nil {
@@ -34,14 +38,29 @@ func NewTemplateHandler() TemplateHandler {
 
 	return &templateHandler{
 		template: tmpl,
+		config:   config,
 	}
 }
 
-func (h *templateHandler) CreateDockerfile(content []byte) (*bytes.Buffer, error) {
+func (h *templateHandler) CreateDockerFile(content []byte) (*bytes.Buffer, error) {
 	buf := &bytes.Buffer{}
 
-	if err := h.template.ExecuteTemplate(buf, "dockerfile.template", types.CreateDockerfileDto{
+	if err := h.template.ExecuteTemplate(buf, "dockerfile.template", types.CreateDockerFileDto{
 		Content: string(bytes.Trim(content, "\x00")),
+	}); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func (h *templateHandler) CreateDockerBuild(name string, tag string) (*bytes.Buffer, error) {
+	buf := &bytes.Buffer{}
+
+	if err := h.template.ExecuteTemplate(buf, "makefile.template", &types.CreateDockerBuildDto{
+		Name: name,
+		Tag:  tag,
+		Org:  h.config.Viper.GetString("organization"),
 	}); err != nil {
 		return nil, err
 	}

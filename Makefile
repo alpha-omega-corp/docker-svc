@@ -16,3 +16,6 @@ db_init:
 
 db_reset:
 	go run cmd/migrations/main.go db reset
+
+config:
+	etcdctl put config_docker < .config

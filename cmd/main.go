@@ -5,8 +5,8 @@ import (
 	"github.com/alpha-omega-corp/docker-svc/pkg/models"
 	"github.com/alpha-omega-corp/docker-svc/proto"
 	"github.com/alpha-omega-corp/services/config"
+	"github.com/alpha-omega-corp/services/core"
 	"github.com/alpha-omega-corp/services/database"
-	core "github.com/alpha-omega-corp/services/server"
 	"github.com/docker/docker/client"
 	"github.com/uptrace/bun"
 	"google.golang.org/grpc"
@@ -23,11 +23,12 @@ func main() {
 		(*models.Dockerfile)(nil),
 	)
 
-	if err := core.NewGRPC(env.Host.Url, dbHandler, func(db *bun.DB, grpc *grpc.Server) {
+	if err := core.NewServer(env.Host.Url, dbHandler, func(db *bun.DB, grpc *grpc.Server) {
 		dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 		if err != nil {
 			panic(err)
 		}
+
 		defer func(cli *client.Client) {
 			err := cli.Close()
 			if err != nil {
@@ -35,7 +36,7 @@ func main() {
 			}
 		}(dockerClient)
 
-		proto.RegisterDockerServiceServer(grpc, pkg.NewServer(db, dockerClient))
+		proto.RegisterDockerServiceServer(grpc, pkg.NewServer(env.Config, dockerClient, db))
 	}); err != nil {
 		panic(err)
 	}

@@ -22,7 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DockerServiceClient interface {
-	CreateImage(ctx context.Context, in *CreateImageRequest, opts ...grpc.CallOption) (*CreateImageResponse, error)
+	GetImage(ctx context.Context, in *GetImageRequest, opts ...grpc.CallOption) (*GetImageResponse, error)
+	StoreImage(ctx context.Context, in *StoreImageRequest, opts ...grpc.CallOption) (*StoreImageResponse, error)
+	BuildImage(ctx context.Context, in *BuildImageRequest, opts ...grpc.CallOption) (*BuildImageResponse, error)
 }
 
 type dockerServiceClient struct {
@@ -33,9 +35,27 @@ func NewDockerServiceClient(cc grpc.ClientConnInterface) DockerServiceClient {
 	return &dockerServiceClient{cc}
 }
 
-func (c *dockerServiceClient) CreateImage(ctx context.Context, in *CreateImageRequest, opts ...grpc.CallOption) (*CreateImageResponse, error) {
-	out := new(CreateImageResponse)
-	err := c.cc.Invoke(ctx, "/auth.DockerService/CreateImage", in, out, opts...)
+func (c *dockerServiceClient) GetImage(ctx context.Context, in *GetImageRequest, opts ...grpc.CallOption) (*GetImageResponse, error) {
+	out := new(GetImageResponse)
+	err := c.cc.Invoke(ctx, "/docker.DockerService/GetImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dockerServiceClient) StoreImage(ctx context.Context, in *StoreImageRequest, opts ...grpc.CallOption) (*StoreImageResponse, error) {
+	out := new(StoreImageResponse)
+	err := c.cc.Invoke(ctx, "/docker.DockerService/StoreImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dockerServiceClient) BuildImage(ctx context.Context, in *BuildImageRequest, opts ...grpc.CallOption) (*BuildImageResponse, error) {
+	out := new(BuildImageResponse)
+	err := c.cc.Invoke(ctx, "/docker.DockerService/BuildImage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +66,9 @@ func (c *dockerServiceClient) CreateImage(ctx context.Context, in *CreateImageRe
 // All implementations must embed UnimplementedDockerServiceServer
 // for forward compatibility
 type DockerServiceServer interface {
-	CreateImage(context.Context, *CreateImageRequest) (*CreateImageResponse, error)
+	GetImage(context.Context, *GetImageRequest) (*GetImageResponse, error)
+	StoreImage(context.Context, *StoreImageRequest) (*StoreImageResponse, error)
+	BuildImage(context.Context, *BuildImageRequest) (*BuildImageResponse, error)
 	mustEmbedUnimplementedDockerServiceServer()
 }
 
@@ -54,8 +76,14 @@ type DockerServiceServer interface {
 type UnimplementedDockerServiceServer struct {
 }
 
-func (UnimplementedDockerServiceServer) CreateImage(context.Context, *CreateImageRequest) (*CreateImageResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateImage not implemented")
+func (UnimplementedDockerServiceServer) GetImage(context.Context, *GetImageRequest) (*GetImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetImage not implemented")
+}
+func (UnimplementedDockerServiceServer) StoreImage(context.Context, *StoreImageRequest) (*StoreImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StoreImage not implemented")
+}
+func (UnimplementedDockerServiceServer) BuildImage(context.Context, *BuildImageRequest) (*BuildImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BuildImage not implemented")
 }
 func (UnimplementedDockerServiceServer) mustEmbedUnimplementedDockerServiceServer() {}
 
@@ -70,20 +98,56 @@ func RegisterDockerServiceServer(s grpc.ServiceRegistrar, srv DockerServiceServe
 	s.RegisterService(&DockerService_ServiceDesc, srv)
 }
 
-func _DockerService_CreateImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateImageRequest)
+func _DockerService_GetImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetImageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DockerServiceServer).CreateImage(ctx, in)
+		return srv.(DockerServiceServer).GetImage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/auth.DockerService/CreateImage",
+		FullMethod: "/docker.DockerService/GetImage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DockerServiceServer).CreateImage(ctx, req.(*CreateImageRequest))
+		return srv.(DockerServiceServer).GetImage(ctx, req.(*GetImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DockerService_StoreImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoreImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DockerServiceServer).StoreImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/docker.DockerService/StoreImage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DockerServiceServer).StoreImage(ctx, req.(*StoreImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DockerService_BuildImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BuildImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DockerServiceServer).BuildImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/docker.DockerService/BuildImage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DockerServiceServer).BuildImage(ctx, req.(*BuildImageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -92,12 +156,20 @@ func _DockerService_CreateImage_Handler(srv interface{}, ctx context.Context, de
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DockerService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "auth.DockerService",
+	ServiceName: "docker.DockerService",
 	HandlerType: (*DockerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateImage",
-			Handler:    _DockerService_CreateImage_Handler,
+			MethodName: "GetImage",
+			Handler:    _DockerService_GetImage_Handler,
+		},
+		{
+			MethodName: "StoreImage",
+			Handler:    _DockerService_StoreImage_Handler,
+		},
+		{
+			MethodName: "BuildImage",
+			Handler:    _DockerService_BuildImage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,18 +1,37 @@
 syntax = "proto3";
 
-package auth;
+package docker;
 
 option go_package = "github.com/alpha-omega-corp/docker-svc/proto";
 
 service DockerService {
-  rpc CreateImage(CreateImageRequest) returns (CreateImageResponse) {}
+  rpc GetImage(GetImageRequest) returns (GetImageResponse) {}
+  rpc StoreImage(StoreImageRequest) returns (StoreImageResponse) {}
+  rpc BuildImage(BuildImageRequest) returns (BuildImageResponse) {}
 }
 
-message CreateImageRequest {
+message GetImageRequest {
+  string name = 1;
+}
+
+message GetImageResponse {
+  int64 status = 1;
+  bytes content = 2;
+}
+
+message StoreImageRequest {
   string name = 1;
   bytes content = 2;
 }
 
-message CreateImageResponse {
+message StoreImageResponse {
+  int64 status = 1;
+}
+
+message BuildImageRequest {
+  string name = 1;
+}
+
+message BuildImageResponse {
   int64 status = 1;
 }
