@@ -3,11 +3,11 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/alpha-omega-corp/docker-svc/pkg/models"
 	"github.com/alpha-omega-corp/docker-svc/proto"
 	"github.com/alpha-omega-corp/services/core"
 	st "github.com/alpha-omega-corp/services/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/uptrace/bun"
@@ -42,29 +42,35 @@ func (s *imageService) GetImage(ctx context.Context, req *proto.GetImageRequest)
 	dockerfile := new(models.Dockerfile)
 	err := s.db.NewSelect().Model(dockerfile).Where("name = ?", req.Name).Scan(ctx)
 	if err != nil {
-		return nil, err
+		return &proto.GetImageResponse{
+			Status:     http.StatusNoContent,
+			Dockerfile: nil,
+			Image:      nil,
+		}, nil
 	}
 
-	images, err := s.client.ImageList(ctx, image.ListOptions{})
+	images, err := s.client.ImageList(ctx, image.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("reference", s.config.Viper.GetString("organization")+"/"+req.Name)),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	imgSlice := make([]*models.Image, len(images))
-	for index, item := range images {
-		imgSlice[index] = &models.Image{
-			ID:         item.ID,
-			Containers: item.Containers,
-			Created:    item.Created,
-			Size:       item.Size,
+	dockerImage := new(proto.Image)
+	if len(images) > 0 {
+		item := images[0]
+		dockerImage = &proto.Image{
+			Id:      item.ID,
+			Size:    item.Size,
+			Tags:    item.RepoTags,
+			Created: item.Created,
 		}
-
-		fmt.Print(imgSlice[index])
 	}
 
 	return &proto.GetImageResponse{
-		Status:  http.StatusOK,
-		Content: dockerfile.Content,
+		Status:     http.StatusOK,
+		Dockerfile: dockerfile.Content,
+		Image:      dockerImage,
 	}, nil
 }
 
